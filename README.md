@@ -4,7 +4,7 @@ A premium, fully client-side **gradient design tool**. Build gradients, add
 effects, animate them, and export to image, video, or GIF — all in the browser,
 no backend required.
 
-**Live:** https://grady.netlify.app
+**Live:** https://grady-design.netlify.app
 
 ## Features
 
