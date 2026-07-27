@@ -43,6 +43,10 @@ export const meshSizeTarget = "mesh.size";
 export const meshSpreadTarget = "mesh.spread";
 export const meshSoftnessTarget = "mesh.softness";
 export const meshBlendTarget = "mesh.blend";
+export const meshModeTarget = "mesh.mode";
+export const meshManualPointsTarget = "mesh.manualPoints";
+export const meshFillActionValue = "mesh-fill-auto";
+export const meshClearActionValue = "mesh-clear-points";
 
 export const appSchema = defineToolcraft({
   canvas: {
@@ -159,9 +163,30 @@ export const appSchema = defineToolcraft({
               type: "slider",
               unit: "%",
             },
+            meshMode: {
+              defaultValue: "auto",
+              label: "Points",
+              options: [
+                { label: "Auto", value: "auto" },
+                { label: "Manual", value: "manual" },
+              ],
+              target: meshModeTarget,
+              type: "segmented",
+              visibleWhen: { greaterThan: 0, target: meshTarget },
+            },
+            meshManual: {
+              actions: [
+                { icon: "wand-sparkles", label: "Fill from auto", value: meshFillActionValue, variant: "outline" },
+                { icon: "eraser", label: "Clear points", value: meshClearActionValue, variant: "outline" },
+              ],
+              label: false,
+              target: "mesh.manualActions",
+              type: "actions",
+              visibleWhen: { equals: "manual", target: meshModeTarget },
+            },
             meshPoints: {
               defaultValue: 5,
-              label: "Points",
+              label: "Count",
               max: 8,
               min: 3,
               performanceReason:
@@ -235,6 +260,15 @@ export const appSchema = defineToolcraft({
               target: "mesh.shuffleAction",
               type: "actions",
               visibleWhen: { greaterThan: 0, target: meshTarget },
+            },
+            // Hidden store for the manual mesh points (renders nothing). Declared
+            // so the runtime persists this target across reloads — the canvas
+            // editor writes to it via controls.setValue.
+            meshManualStore: {
+              defaultValue: [],
+              label: false,
+              target: meshManualPointsTarget,
+              type: "meshManualStore",
             },
           },
         },

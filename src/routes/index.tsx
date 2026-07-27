@@ -28,6 +28,10 @@ import {
   imageFormatTarget,
   imageResolutionTarget,
   meshBlendTarget,
+  meshClearActionValue,
+  meshFillActionValue,
+  meshManualPointsTarget,
+  meshModeTarget,
   meshPointsTarget,
   meshSeedTarget,
   meshShuffleActionValue,
@@ -67,6 +71,7 @@ import {
   gradientPresets,
   harmonizeGradient,
   meshBlobs,
+  meshModeValue,
   motionDurationSeconds,
   motionModeValue,
   motionUsesAngle,
@@ -80,8 +85,10 @@ import {
   paintVignette,
   patternTilesAcross,
   randomizeGradient,
+  readMeshManualPoints,
   type EffectPreset,
   type GradientValue,
+  type MeshBlob,
 } from "../app/gradient";
 import { GradientPreview } from "../app/gradient-preview";
 import { PaletteImageControl } from "../app/palette-image";
@@ -128,16 +135,20 @@ function readGradientScene(state: ToolcraftPanelActionContext["state"]) {
   const gradientValue = readAdjustedGradient(state);
   const mesh = readNumber(state.values[meshTarget], 0);
 
+  const meshMode = meshModeValue(state.values[meshModeTarget]);
+
   return {
     blobs:
       mesh > 0
-        ? meshBlobs(
-            gradientValue,
-            readNumber(state.values[meshPointsTarget], 5),
-            readNumber(state.values[meshSeedTarget], 1),
-            readNumber(state.values[meshSizeTarget], 100),
-            readNumber(state.values[meshSpreadTarget], 100),
-          )
+        ? meshMode === "manual"
+          ? readMeshManualPoints(state.values[meshManualPointsTarget])
+          : meshBlobs(
+              gradientValue,
+              readNumber(state.values[meshPointsTarget], 5),
+              readNumber(state.values[meshSeedTarget], 1),
+              readNumber(state.values[meshSizeTarget], 100),
+              readNumber(state.values[meshSpreadTarget], 100),
+            )
         : [],
     contrast: readNumber(state.values[contrastTarget], 0),
     focal: focalFraction(state.values[focalTarget]),
@@ -177,6 +188,18 @@ function readGradientScene(state: ToolcraftPanelActionContext["state"]) {
 }
 
 type GradientScene = ReturnType<typeof readGradientScene>;
+
+// Generates auto-mesh blobs from the current mesh settings — used to seed the
+// manual editor ("Fill from auto") and to reshuffle manual points.
+function autoMeshBlobs(context: ToolcraftPanelActionContext, seed: number): MeshBlob[] {
+  return meshBlobs(
+    readAdjustedGradient(context.state),
+    readNumber(context.state.values[meshPointsTarget], 5),
+    seed,
+    readNumber(context.state.values[meshSizeTarget], 100),
+    readNumber(context.state.values[meshSpreadTarget], 100),
+  );
+}
 
 // Paints every layer above the gradient base: mesh through temperature in CSS
 // space, then grain and pattern at full device resolution (identity transform)
@@ -715,11 +738,46 @@ function onPanelAction(context: ToolcraftPanelActionContext): Promise<void> | vo
   }
 
   if (value === meshShuffleActionValue) {
+    const seed = Math.floor(Math.random() * 1_000_000_000) + 1;
+
     context.dispatch({
       label: "Shuffle mesh layout",
       target: meshSeedTarget,
       type: "controls.setValue",
-      value: Math.floor(Math.random() * 1_000_000_000) + 1,
+      value: seed,
+    });
+    // In manual mode, shuffle re-generates the editable points from a fresh
+    // random layout (so it stays useful there too, not just for the auto mesh).
+    if (meshModeValue(context.state.values[meshModeTarget]) === "manual") {
+      context.dispatch({
+        label: "Shuffle mesh points",
+        target: meshManualPointsTarget,
+        type: "controls.setValue",
+        value: autoMeshBlobs(context, seed),
+      });
+    }
+
+    return;
+  }
+
+  if (value === meshFillActionValue) {
+    // Seed the manual editor with the current auto layout to tweak from.
+    context.dispatch({
+      label: "Fill mesh from auto",
+      target: meshManualPointsTarget,
+      type: "controls.setValue",
+      value: autoMeshBlobs(context, readNumber(context.state.values[meshSeedTarget], 1)),
+    });
+
+    return;
+  }
+
+  if (value === meshClearActionValue) {
+    context.dispatch({
+      label: "Clear mesh points",
+      target: meshManualPointsTarget,
+      type: "controls.setValue",
+      value: [],
     });
 
     return;
@@ -778,6 +836,8 @@ function onPanelAction(context: ToolcraftPanelActionContext): Promise<void> | vo
 }
 
 const controlRenderers = {
+  // Invisible store control: only exists so the manual mesh points persist.
+  meshManualStore: () => null,
   paletteImage: PaletteImageControl,
 };
 

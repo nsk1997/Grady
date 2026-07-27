@@ -1127,6 +1127,49 @@ export function paintGlow(
 
 export type MeshBlob = { color: string; radius: number; x: number; y: number };
 
+// --- Manual mesh -----------------------------------------------------------
+// "Auto" mesh scatters blobs procedurally (meshBlobs); "manual" mesh lets the
+// user place/drag their own blobs on the canvas. Manual points share the exact
+// MeshBlob shape, so the same getMeshCss/paintMesh render both.
+
+export type MeshMode = "auto" | "manual";
+
+export function meshModeValue(value: unknown): MeshMode {
+  return value === "manual" ? "manual" : "auto";
+}
+
+// Parses the persisted manual-points value (an array stored in control state)
+// into validated MeshBlobs, dropping anything malformed.
+export function readMeshManualPoints(value: unknown): MeshBlob[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const points: MeshBlob[] = [];
+
+  for (const item of value) {
+    if (!item || typeof item !== "object") {
+      continue;
+    }
+
+    const record = item as Record<string, unknown>;
+    const x = Number(record.x);
+    const y = Number(record.y);
+    const radius = Number(record.radius);
+
+    if (Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(radius)) {
+      points.push({
+        color: typeof record.color === "string" ? record.color : "#FFFFFF",
+        radius: clamp(radius, 0.04, 1.5),
+        x: clamp(x, 0, 1),
+        y: clamp(y, 0, 1),
+      });
+    }
+  }
+
+  return points;
+}
+
 // mulberry32 — a tiny, fast, deterministic PRNG so preview and export generate
 // the exact same blob layout from a given seed.
 function mulberry32(seed: number): () => number {

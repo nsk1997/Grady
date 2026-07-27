@@ -12,6 +12,7 @@ import {
   grainTarget,
   gradientTarget,
   meshBlendTarget,
+  meshModeTarget,
   meshPointsTarget,
   meshSeedTarget,
   meshSizeTarget,
@@ -52,6 +53,7 @@ import {
   grainTileSize,
   meshBlobs,
   meshCssBlend,
+  meshModeValue,
   motionDurationSeconds,
   motionModeValue,
   motionUsesAngle,
@@ -60,6 +62,7 @@ import {
   temperatureFill,
   type GradientValue,
 } from "./gradient";
+import { ManualMeshLayer } from "./manual-mesh";
 
 function readColorHex(value: unknown, fallback: string): string {
   if (typeof value === "string") {
@@ -119,8 +122,12 @@ export function GradientPreview(): React.JSX.Element {
       ? (state.values[meshBlendTarget] as string)
       : undefined,
   );
+  const meshMode = meshModeValue(state.values[meshModeTarget]);
   const blobs =
-    mesh > 0 ? meshBlobs(gradientValue, meshPoints, meshSeed, meshSize, meshSpread) : [];
+    mesh > 0 && meshMode === "auto"
+      ? meshBlobs(gradientValue, meshPoints, meshSeed, meshSize, meshSpread)
+      : [];
+  const meshPalette = (gradientValue.stops ?? []).map((stop) => stop.color);
   const pattern = readNumber(state.values[patternTarget], 0);
   const patternStyle =
     typeof state.values[patternStyleTarget] === "string"
@@ -169,7 +176,14 @@ export function GradientPreview(): React.JSX.Element {
           ...(motionLayer ?? {}),
         }}
       />
-      {blobs.length > 0 ? (
+      {mesh > 0 && meshMode === "manual" ? (
+        <ManualMeshLayer
+          meshBlendCss={meshBlend}
+          meshSoftness={meshSoftness}
+          opacity={mesh}
+          paletteColors={meshPalette}
+        />
+      ) : blobs.length > 0 ? (
         <div
           className="pointer-events-none absolute inset-0 h-full w-full"
           style={{
