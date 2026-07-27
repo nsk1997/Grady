@@ -1,0 +1,215 @@
+@import "tailwindcss";
+@source ".";
+@source "./toolcraft/ui";
+@source "./toolcraft/runtime";
+@import "tw-animate-css";
+@import "@fontsource-variable/inter";
+@import "@/toolcraft/ui/styles.css";
+@import "@/toolcraft/runtime/styles.css";
+
+@theme {
+  --spacing-field-control: 0.3125rem;
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 0.875rem;
+  --text-xs-plus: 0.8125rem;
+  --text-xs-plus--line-height: 1.125rem;
+  --font-sans: "Inter Variable", sans-serif;
+  --font-mono:
+    ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant focus-visible (&:is([data-focus-visible-mode="keyboard"] *):focus-visible);
+
+:root {
+  /* Vibrant / glassy: dark charcoal shell with a faint violet cast, violet
+     primary + cyan accent. Panels are frosted (see the glass rules below). */
+  --background: oklch(0.165 0.018 278);
+  --foreground: oklch(0.97 0.006 278);
+  --card: oklch(0.235 0.028 280);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.235 0.028 280);
+  --popover-foreground: oklch(0.985 0 0);
+  --link: oklch(0.8 0.13 210);
+  --primary: oklch(0.62 0.235 288);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.32 0.09 283);
+  --secondary-foreground: oklch(0.97 0.01 280);
+  --muted: oklch(0.27 0.022 280);
+  --muted-foreground: oklch(0.73 0.02 280);
+  --accent: oklch(0.76 0.145 208);
+  --accent-foreground: oklch(0.2 0.03 240);
+  --inspect: oklch(0.62 0.2 300);
+  --attention: oklch(0.72 0.16 55);
+  --attention-foreground: oklch(0.16 0.02 280);
+  --destructive: oklch(0.62 0.22 18);
+  --destructive-foreground: var(--foreground);
+  --border: oklch(0.42 0.035 284);
+  --input: oklch(0.42 0.035 284);
+  --ring: oklch(0.62 0.235 288);
+  --radius: 0.75rem;
+  --button-radius-xs: 0.375rem;
+  --button-radius-sm: 0.5rem;
+  --button-radius-md: 0.625rem;
+  --button-radius-lg: 0.75rem;
+
+  /* Glassmorphism + glow knobs used by the app-layer rules below. */
+  --glass-bg: oklch(0.22 0.028 280 / 0.55);
+  --glass-blur: 22px;
+  --glass-border: color-mix(in oklab, white 9%, transparent);
+  --glass-highlight: color-mix(in oklab, white 12%, transparent);
+  /* Brand accents named so toolcraft's theme-scoped tokens can't shadow them —
+     these inherit from :root everywhere, unlike --primary/--accent. */
+  --brand-primary: oklch(0.62 0.235 288);
+
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+    box-sizing: border-box;
+    outline-color: color-mix(in oklab, var(--ring) 50%, transparent);
+  }
+
+  html {
+    font-family: var(--font-sans);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  min-height: 100%;
+}
+
+#root {
+  overflow: clip;
+}
+
+input,
+button {
+  font-family: inherit;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--foreground) 10%, transparent) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  min-height: 2.75rem;
+  border: 0 solid transparent;
+  border-radius: 999px;
+  background-color: color-mix(in oklab, var(--foreground) 10%, transparent);
+  background-clip: padding-box;
+}
+
+/* ============================================================================
+   Vibrant / glassy skin — app-layer rules targeting toolcraft's rendered DOM
+   via its stable data-* attributes. Nothing here edits guarded framework files;
+   it only restyles their output, so the integrity check stays intact.
+   ========================================================================== */
+
+/* Frosted-glass control panel: the gradient canvas blurs through it. The panel
+   background element already renders translucent charcoal — we add the blur,
+   a soft shadow, a hairline highlight border, and rounded corners. */
+[data-panel-id="properties"] {
+  background-color: var(--glass-bg) !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.35);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.35);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow:
+    0 24px 70px -24px rgba(0, 0, 0, 0.75),
+    inset 0 1px 0 0 var(--glass-highlight);
+}
+
+/* Bottom toolbar (zoom / theme / history) as a matching floating glass pill. */
+[data-toolcraft-inspect-toolbar],
+[data-panel-type="toolbar"] {
+  background-color: var(--glass-bg) !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.35);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.35);
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  box-shadow:
+    0 16px 40px -16px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 0 var(--glass-highlight);
+}
+
+/* toolcraft paints a glossy light->blue gradient on every default-variant
+   control (select triggers AND the primary button). We flatten both — its rule
+   out-specifies a single-attribute selector, so these use two attributes +
+   !important to win. */
+
+/* Select triggers (Gradient type, Format, Resolution): drop toolcraft's glossy
+   gradient, but give them a defined fill + border so they read as tappable
+   dropdowns rather than blending into the panel. */
+[data-slot="select-trigger"][data-variant="default"] {
+  background-image: none !important;
+  background-color: color-mix(in oklab, white 9%, transparent) !important;
+  border: 1px solid color-mix(in oklab, white 14%, transparent) !important;
+}
+
+[data-slot="select-trigger"][data-variant="default"]:hover {
+  background-color: color-mix(in oklab, white 13%, transparent) !important;
+  border-color: color-mix(in oklab, white 20%, transparent) !important;
+}
+
+/* Primary action buttons (Export PNG): flat solid violet — no gradient sheen. */
+button[data-slot="button"][data-variant="default"] {
+  background-image: none !important;
+  background-color: var(--brand-primary) !important;
+  color: oklch(0.99 0 0);
+  border-color: transparent;
+  transition: filter 180ms ease;
+}
+
+button[data-slot="button"][data-variant="default"]:hover {
+  filter: brightness(1.08);
+}
+
+/* The editable canvas sits on a soft drop shadow so the artwork reads as a
+   floating card above the charcoal stage. */
+[data-toolcraft-editable-canvas] {
+  border-radius: var(--radius-lg);
+  box-shadow: 0 40px 90px -40px rgba(0, 0, 0, 0.85);
+}
+
+/* Warm the charcoal stage with a faint violet radial so it isn't flat black. */
+[data-toolcraft-canvas-world] {
+  background:
+    radial-gradient(
+      120% 90% at 50% -10%,
+      color-mix(in oklab, var(--primary) 12%, transparent),
+      transparent 60%
+    );
+}
+
