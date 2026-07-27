@@ -4,6 +4,8 @@ A premium, fully client-side **gradient design tool**. Build gradients, add
 effects, animate them, and export to image, video, or GIF — all in the browser,
 no backend required.
 
+**Live:** https://grady.netlify.app
+
 ## Features
 
 - **Gradient editor** — linear/radial/angular/diamond, multi-stop, OKLCH-based
