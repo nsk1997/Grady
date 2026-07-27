@@ -4,6 +4,10 @@
   command = "pnpm build"
   publish = "dist"
 
+[build.environment]
+  # Vite 8 requires Node 20.19+/22.12+; pin so Netlify doesn't build on an old default.
+  NODE_VERSION = "22"
+
 # Single-page app: serve index.html for any path so client routing works.
 [[redirects]]
   from = "/*"
